@@ -1,6 +1,27 @@
 import { reactive } from "vue"
 
-export const store = reactive({
+type Authorization = {
+    code: {
+        value: string;
+        set: (value: string) => void;
+    };
+    codeVerifier: {
+        value: string;
+        set: (value: string) => void;
+    };
+    accessToken: {
+        value: string;
+        expirationDate: Date | null;
+        set: (value: string, expiresIn: number) => void;
+        refresh: (refreshToken: string) => void;
+    },
+    refreshToken: {
+        value: string
+        set: (value: string) => void
+    }
+}
+
+export const authorization = reactive<Authorization>({
     code: {
         value: localStorage.getItem("code") || "",
         set: function(value: string){
@@ -17,8 +38,25 @@ export const store = reactive({
     },
     accessToken: {
         value: localStorage.getItem("access_token") || "",
-        set: function(value: string){ 
+        expirationDate: new Date(localStorage.getItem("access_token_expiration_date")) || null,
+        set: function(value: string, expiresIn: number){ 
             localStorage.setItem("access_token", value)
+            this.value = value
+
+            // make this a worker that automatically get the refreshed token
+
+            const expirationDate = new Date(new Date().getTime() + expiresIn * 1000)
+            localStorage.setItem("access_token_expiration_date", expirationDate)
+            this.expirationDate = expirationDate
+        },
+        refresh: function(refreshToken: string){
+            //...
+        }
+    },
+    refreshToken: {
+        value: localStorage.getItem("refresh_token") || "",
+        set: function(value: string){
+            localStorage.setItem("refresh_token", value)
             this.value = value
         }
     },

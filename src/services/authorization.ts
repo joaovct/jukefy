@@ -1,4 +1,4 @@
-import { store } from "@/store/authorization"
+import { store } from "@/store"
 
 const baseURL = "https://accounts.spotify.com"
 
@@ -28,9 +28,7 @@ function authorize() {
         const codeChallenge = base64encode(hashed)
         const authUrl = new URL(baseURL + "/authorize")
 
-        console.log(codeVerifier)
-
-        store.codeVerifier.set(codeVerifier)
+        store.authorization.codeVerifier.set(codeVerifier)
 
         const params = {
             response_type: 'code',
@@ -46,7 +44,46 @@ function authorize() {
     })
 }
 
+type getTokenResponse = {
+    access_token: string
+    refresh_token: string
+    expires_in: number
+}
+
+type getTokenParsedResponse = {
+    accessToken: string
+    refreshToken: string
+    expiresIn: number
+}
+
+async function getToken(): Promise<getTokenParsedResponse> {
+
+    const payload = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            client_id: import.meta.env.VITE_CLIENT_ID,
+            redirect_uri: import.meta.env.VITE_REDIRECT_URI,
+            code: store.authorization.code.value,
+            code_verifier: store.authorization.codeVerifier.value,
+            grant_type: 'authorization_code',
+        }),
+    }
+
+    const body = await fetch(baseURL + "/api/token", payload)
+    const response: getTokenResponse = await body.json()
+
+    return {
+        accessToken: response.access_token,
+        refreshToken: response.refresh_token,
+        expiresIn: response.expires_in
+    }
+}
+
 export const authorization = {
     authorize,
+    getToken,
 }
 
