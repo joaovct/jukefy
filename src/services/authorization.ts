@@ -1,6 +1,6 @@
 import { store } from "@/store"
 
-const baseURL = "https://accounts.spotify.com"
+export const baseURL = "https://accounts.spotify.com"
 
 function authorize() {
     const generateRandomString = (length: number) => {
@@ -44,13 +44,13 @@ function authorize() {
     })
 }
 
-type getTokenResponse = {
+export type getTokenResponse = {
     access_token: string
     refresh_token: string
     expires_in: number
 }
 
-type getTokenParsedResponse = {
+export type getTokenParsedResponse = {
     accessToken: string
     refreshToken: string
     expiresIn: number
@@ -81,6 +81,7 @@ async function getToken(): Promise<getTokenParsedResponse> {
         expiresIn: response.expires_in
     }
 }
+
 
 export const authorization = {
     authorize,

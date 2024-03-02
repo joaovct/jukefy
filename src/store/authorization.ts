@@ -11,13 +11,15 @@ type Authorization = {
     };
     accessToken: {
         value: string;
-        expirationDate: Date | null;
-        set: (value: string, expiresIn: number) => void;
-        refresh: (refreshToken: string) => void;
+        set: (value: string) => void;
     },
     refreshToken: {
         value: string
         set: (value: string) => void
+    },
+    expirationDate: {
+        value: Date
+        set: (expiresIn: number) => void
     }
 }
 
@@ -38,20 +40,10 @@ export const authorization = reactive<Authorization>({
     },
     accessToken: {
         value: localStorage.getItem("access_token") || "",
-        expirationDate: new Date(localStorage.getItem("access_token_expiration_date")) || null,
-        set: function(value: string, expiresIn: number){ 
+        set: function(value: string){ 
             localStorage.setItem("access_token", value)
             this.value = value
-
-            // make this a worker that automatically get the refreshed token
-
-            const expirationDate = new Date(new Date().getTime() + expiresIn * 1000)
-            localStorage.setItem("access_token_expiration_date", expirationDate)
-            this.expirationDate = expirationDate
         },
-        refresh: function(refreshToken: string){
-            //...
-        }
     },
     refreshToken: {
         value: localStorage.getItem("refresh_token") || "",
@@ -60,4 +52,12 @@ export const authorization = reactive<Authorization>({
             this.value = value
         }
     },
+    expirationDate: {
+        value: new Date(localStorage.getItem("expiration_date") || Date.now()),
+        set: function(expiresIn) {
+            const date = new Date( Date.now() + (expiresIn * 1000))
+            this.value = date
+            localStorage.setItem("expiration_date", new Date( Date.now() + (expiresIn * 1000)).toString())
+        }
+    }
 })

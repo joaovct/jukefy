@@ -1,6 +1,12 @@
 
 <script setup lang="ts">
 import { authorization } from '@/services/authorization'
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  localStorage.clear()
+})
+
 </script>
 
 <template>
