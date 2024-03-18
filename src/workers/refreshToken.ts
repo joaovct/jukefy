@@ -1,11 +1,11 @@
-import { type getTokenParsedResponse, type getTokenResponse } from "@/services/authorization"
+import { type GetTokenParsedResponse, type GetTokenResponse } from "@/services/authorization"
 
 export type InputRefreshExpiratedToken = {
     refreshToken: string
     expirationDate: Date
 }
 
-export type OutputRefreshExpiratedToken = getTokenParsedResponse
+export type OutputRefreshExpiratedToken = GetTokenParsedResponse
 
 onmessage = (ev: MessageEvent<InputRefreshExpiratedToken>) => {
     const { refreshToken, expirationDate } = ev.data
@@ -18,7 +18,7 @@ onmessage = (ev: MessageEvent<InputRefreshExpiratedToken>) => {
 }
 
 // Cannot be placed along the service folder because this last one uses the store
-async function getRefreshedToken(refreshToken: string): Promise<getTokenParsedResponse> {
+async function getRefreshedToken(refreshToken: string): Promise<GetTokenParsedResponse> {
     const payload = {
         method: "POST",
         headers: {
@@ -32,7 +32,7 @@ async function getRefreshedToken(refreshToken: string): Promise<getTokenParsedRe
     }
 
     const body = await fetch("https://accounts.spotify.com/api/token", payload)
-    const response: getTokenResponse = await body.json()
+    const response: GetTokenResponse = await body.json()
 
     return {
         accessToken: response.access_token,

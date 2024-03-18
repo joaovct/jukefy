@@ -2,6 +2,15 @@ import { store } from "@/store"
 
 export const baseURL = "https://accounts.spotify.com"
 
+export type ErrorResponse = {
+    error: string
+    error_description: string
+}
+
+export type ErrorParsedResponse = {
+    error: string
+}
+
 function authorize() {
     const generateRandomString = (length: number) => {
         const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -44,19 +53,19 @@ function authorize() {
     })
 }
 
-export type getTokenResponse = {
+export type GetTokenResponse = {
     access_token: string
     refresh_token: string
     expires_in: number
 }
 
-export type getTokenParsedResponse = {
+export type GetTokenParsedResponse = {
     accessToken: string
     refreshToken: string
     expiresIn: number
 }
 
-async function getToken(): Promise<getTokenParsedResponse> {
+async function getToken(): Promise<GetTokenParsedResponse> {
 
     const payload = {
         method: 'POST',
@@ -72,8 +81,15 @@ async function getToken(): Promise<getTokenParsedResponse> {
         }),
     }
 
+
     const body = await fetch(baseURL + "/api/token", payload)
-    const response: getTokenResponse = await body.json()
+
+    if(!body.ok){
+        const response: ErrorResponse = await body.json()
+        throw new Error(response.error)
+    }
+
+    const response: GetTokenResponse = await body.json()
 
     return {
         accessToken: response.access_token,
