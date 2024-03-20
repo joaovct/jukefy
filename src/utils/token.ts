@@ -1,41 +1,13 @@
 import { authorization } from "@/store/authorization"
 import { workers } from "@/workers"
 import type { InputRefreshExpiratedToken, OutputRefreshExpiratedToken } from "@/workers/refreshToken"
-import router from '@/router'
 import { services } from "@/services"
 
 const worker = new workers.refreshToken() as Worker
 
-export async function setupToken() {
-    const params = parseCode()
-    const isAccessTokenStored = (authorization.expirationDate.value && new Date() < authorization.expirationDate.value)
-
-    if (!params.code && !isAccessTokenStored) {
-        // TODO: apply this logic to all restricted areas
-        return router.push("/")
-    }
-
-    if (params.code && !isAccessTokenStored) {
-        authorization.code.set(params.code)
-        
-        try {
-            const response = await services.authorization.getToken()
-    
-            setToken({ ...response })
-        } catch (error) {
-            // token invalid
-            return router.push("/")
-        }
-    }
-
-    postMessage({ refreshToken: authorization.refreshToken.value, expirationDate: authorization.expirationDate.value })
-    worker.onmessage = onMessage
-}
-
-
 type ParseCodeParameters = { code?: string, error?: string }
 
-function parseCode(): ParseCodeParameters {
+function parseParams(): ParseCodeParameters {
     const urlParams = new URLSearchParams(window.location.search)
     const params: ParseCodeParameters = {}
 
@@ -75,4 +47,39 @@ function onMessage(event: MessageEvent<OutputRefreshExpiratedToken>) {
 
     const refreshData = setToken({ ...data })
     postMessage({ refreshToken: refreshData.refreshToken, expirationDate: refreshData.expirationDate })
+}
+
+export function isAccessTokenStoredValid() {
+    return authorization.expirationDate.value && new Date() < authorization.expirationDate.value
+}
+
+/**
+ * 
+ * @returns true or false on wheter the setup was successful or not.
+ */
+export async function setupToken() {
+    const params = parseParams()
+    const isTokenValid = (authorization.expirationDate.value && new Date() < authorization.expirationDate.value)
+
+    if(!params.code && !isTokenValid)
+        // no token stored in params neither a valid one in localStorage
+        return false
+
+    if (params.code && !isTokenValid) {
+        authorization.code.set(params.code)
+        
+        try {
+            const response = await services.authorization.getToken()
+    
+            setToken({ ...response })
+            return true
+        } catch (error) {
+            // token invalid
+            return false
+        }
+    }
+
+    postMessage({ refreshToken: authorization.refreshToken.value, expirationDate: authorization.expirationDate.value })
+    worker.onmessage = onMessage
+    return true
 }
