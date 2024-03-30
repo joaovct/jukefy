@@ -1,17 +1,9 @@
 import { store } from "@/store"
+import type { AuthorizationCodePKCE, Authorization_code_PKCE } from "@/types/types"
 
 export const baseURL = "https://accounts.spotify.com"
 
-export type ErrorResponse = {
-    error: string
-    error_description: string
-}
-
-export type ErrorParsedResponse = {
-    error: string
-}
-
-function authorize() {
+function requestUserAuthorization() {
     const generateRandomString = (length: number) => {
         const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
         const values = crypto.getRandomValues(new Uint8Array(length))
@@ -39,7 +31,7 @@ function authorize() {
 
         store.authorization.codeVerifier.set(codeVerifier)
 
-        const params = {
+        const params: Authorization_code_PKCE["request_user_authorization"]["URLParams"] = {
             response_type: 'code',
             client_id: import.meta.env.VITE_CLIENT_ID,
             scope: import.meta.env.VITE_API_SCOPE,
@@ -53,54 +45,43 @@ function authorize() {
     })
 }
 
-export type GetTokenResponse = {
-    access_token: string
-    refresh_token: string
-    expires_in: number
-}
-
-export type GetTokenParsedResponse = {
-    accessToken: string
-    refreshToken: string
-    expiresIn: number
-}
-
-async function getToken(): Promise<GetTokenParsedResponse> {
-
-    const payload = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-            client_id: import.meta.env.VITE_CLIENT_ID,
-            redirect_uri: import.meta.env.VITE_REDIRECT_URI,
-            code: store.authorization.code.value,
-            code_verifier: store.authorization.codeVerifier.value,
-            grant_type: 'authorization_code',
-        }),
+async function requestAccessToken(): Promise<AuthorizationCodePKCE["requestAccessToken"]["response"]> {
+    const method: Authorization_code_PKCE["request_access_token"]["payload"]["method"] = "POST"
+    const headers: Authorization_code_PKCE["request_access_token"]["payload"]["headers"] = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    const body: Authorization_code_PKCE["request_access_token"]["payload"]["body"] = {
+        client_id: import.meta.env.VITE_CLIENT_ID,
+        redirect_uri: import.meta.env.VITE_REDIRECT_URI,
+        code: store.authorization.code.value,
+        code_verifier: store.authorization.codeVerifier.value,
+        grant_type: 'authorization_code',
     }
 
+    const req = await fetch(baseURL + "/api/token", { 
+        method,
+        headers,
+        body: new URLSearchParams(body) 
+    })
 
-    const body = await fetch(baseURL + "/api/token", payload)
-
-    if(!body.ok){
-        const response: ErrorResponse = await body.json()
+    if (!req.ok) {
+        const response: Authorization_code_PKCE["request_access_token"]["error_response"] = await req.json()
         throw new Error(response.error)
     }
 
-    const response: GetTokenResponse = await body.json()
+    const response: Authorization_code_PKCE["request_access_token"]["response"] = await req.json()
 
     return {
         accessToken: response.access_token,
+        expiresIn: response.expires_in,
         refreshToken: response.refresh_token,
-        expiresIn: response.expires_in
+        scope: response.scope,
+        tokenType: response.token_type        
     }
 }
 
-
 export const authorization = {
-    authorize,
-    getToken,
+    requestUserAuthorization,
+    requestAccessToken,
 }
 

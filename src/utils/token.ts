@@ -2,21 +2,21 @@ import { authorization } from "@/store/authorization"
 import { workers } from "@/workers"
 import type { InputRefreshExpiratedToken, OutputRefreshExpiratedToken } from "@/workers/refreshToken"
 import { services } from "@/services"
+import type { Authorization_code_PKCE } from "@/types/types"
 
 const worker = new workers.refreshToken() as Worker
 
-type ParseCodeParameters = { code?: string, error?: string }
-
-function parseParams(): ParseCodeParameters {
+function getUrlParams(): Authorization_code_PKCE["request_user_authorization"]["response"] {
     const urlParams = new URLSearchParams(window.location.search)
-    const params: ParseCodeParameters = {}
 
-    if (urlParams.has('code'))
-        params.code = urlParams.get('code') as string
-    if (urlParams.has('error'))
-        params.error = urlParams.get('error') as string
+    if(urlParams.has('code')){
+        return {
+            code: urlParams.get('code') as string,
+            state: urlParams.get('state') || undefined
+        }
+    }
 
-    return params
+    throw new Error(urlParams.get("error") || undefined)
 }
 
 interface SetTokenParameters {
@@ -57,8 +57,8 @@ export function isAccessTokenStoredValid() {
  * 
  * @returns true or false on wheter the setup was successful or not.
  */
-export async function setupToken() {
-    const params = parseParams()
+export async function getUserAuthorization() {
+    const params = getUrlParams()
     const isTokenValid = (authorization.expirationDate.value && new Date() < authorization.expirationDate.value)
 
     if(!params.code && !isTokenValid)
@@ -69,7 +69,7 @@ export async function setupToken() {
         authorization.code.set(params.code)
         
         try {
-            const response = await services.authorization.getToken()
+            const response = await services.authorization.requestAccessToken()
     
             setToken({ ...response })
             return true

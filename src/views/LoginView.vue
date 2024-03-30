@@ -11,7 +11,7 @@ onMounted(() => {
 
 <template>
   <div class="main">
-    <button @click="authorization.authorize">login</button>
+    <button @click="authorization.requestUserAuthorization">login</button>
   </div>
 </template>
 

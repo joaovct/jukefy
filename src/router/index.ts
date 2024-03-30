@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import HomeView from '../views/HomeView.vue'
-import { isAccessTokenStoredValid, setupToken } from '@/utils/token'
+import { isAccessTokenStoredValid, getUserAuthorization } from '@/utils/token'
 
 const routes = [
   {
@@ -29,9 +29,9 @@ router.beforeEach(async (to) => {
   if (isRestrict) {
 
     if (to.name === "home") {
-      const isAccessTokenSuccessful = await setupToken()
+      const isAuthorizationSuccessful = await getUserAuthorization()
 
-      if (!isAccessTokenSuccessful)
+      if (!isAuthorizationSuccessful)
         return router.push("/")
     
     }else if (!isAccessTokenStoredValid()){
