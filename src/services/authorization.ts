@@ -1,5 +1,6 @@
 import { store } from "@/store"
 import type { AuthorizationCodePKCE, Authorization_code_PKCE } from "@/types/types"
+import { camelize } from "@/utils/camelize"
 
 export const baseURL = "https://accounts.spotify.com"
 
@@ -66,18 +67,12 @@ async function requestAccessToken(): Promise<AuthorizationCodePKCE["requestAcces
 
     if (!req.ok) {
         const response: Authorization_code_PKCE["request_access_token"]["error_response"] = await req.json()
-        throw new Error(response.error)
+        throw new Error(`error: ${response.error}, description: ${response.error_description}`)
     }
 
     const response: Authorization_code_PKCE["request_access_token"]["response"] = await req.json()
 
-    return {
-        accessToken: response.access_token,
-        expiresIn: response.expires_in,
-        refreshToken: response.refresh_token,
-        scope: response.scope,
-        tokenType: response.token_type        
-    }
+    return camelize(response)
 }
 
 export const authorization = {

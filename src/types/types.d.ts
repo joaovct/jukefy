@@ -262,6 +262,10 @@ export type Web_API = {
                     item: null
                 }
             )
+            error_response: {
+                status: 400 | 403 | 429
+                message: string
+            }
         }
     }
 }

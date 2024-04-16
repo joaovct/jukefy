@@ -1,5 +1,6 @@
 import { authorization } from "@/store/authorization"
 import type { WebAPI, Web_API } from "@/types/types"
+import { camelize } from "@/utils/camelize"
 
 const baseURL = import.meta.env.VITE_BASE_URL_API + "/me/player"
 
@@ -12,18 +13,20 @@ async function getPlaybackState(): Promise<WebAPI["Player"]["getPlaybackState"][
         },
     }
 
-    const body = await fetch(baseURL, payload)
+    const req = await fetch(baseURL, payload)
 
-    // parse based on the response status
-    // if(!body.ok){
-    //     const response: ErrorResponse = await body.json()
-    //     throw new Error(response.error)
-    // }
+    if(req.status !== 200){
 
-    // type afterwards
-    const response: any = await body.json()
+        if(req.status === 204)
+            throw new Error("Playback not available or active")
 
-    return response
+        const response: Web_API["Player"]["get_playback_state"]["error_response"] = await req.json()
+        throw new Error(`error: ${response.status}, description: ${response.message}`)
+    }
+
+    const response: Web_API["Player"]["get_playback_state"]["response"] = await req.json()
+
+    return camelize(response)
 }
 
 export const player = {
