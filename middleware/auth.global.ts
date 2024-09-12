@@ -1,6 +1,6 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
     const isRouteRestrict = utils.isRouteRestrict(to.name)
-    setPageLayout(isRouteRestrict ? "restrict" : undefined)
+    setPageLayout(isRouteRestrict ? "restrict" : false)
 
     if (!import.meta.client)
         return
@@ -11,7 +11,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
         // redirects to unrestricted area if user's is not logged
         if (!isAuthorizationSuccessful) {
-            return navigateTo("/")
+            // avoid rendering problems
+            return window.location.href = "/"
         }
         // redirect to restricted area if logged users access a unrestricted area
     } else if (utils.token.isAccessTokenStoredValid()) {
