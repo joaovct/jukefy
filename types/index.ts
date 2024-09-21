@@ -7,6 +7,10 @@ declare global {
         [key in keyof T as key extends string ? Camelize<key> : key]: T[key] extends object ? CamelizeKeys<T[key]> : T[key]
     }
 
+    type EnforceExact<T, U> = keyof U extends keyof T ? keyof T extends keyof U ? U : never : never;
+
+    type OmitStrict<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+
     // WEB API
 
     type Authorization_code_PKCE = {
@@ -135,7 +139,74 @@ declare global {
     }
 
     type WebAPI = CamelizeKeys<Web_API>
+
+    // Web Socket API
+
+    type wsPeer = ExtractOpenParamType<RemoveUndefined<WebSocketHandlerType>>
+
+    interface wsUser {
+        readonly id: string
+        roomId?: string
+    }
+
+    interface wsUsers {
+        [key: wsUser["id"]]: wsUser
+    }
+
+    interface wsServerUser extends wsUser {
+        readonly peerId: string
+    }
+
+    type wsServerUsers = Map<string, wsServerUser>
+
+    interface wsRoom {
+        readonly id: string
+        readonly usersId: string[]
+    }
+
+    interface wsRooms {
+        [key: wsRoom['id']]: wsRoom
+    }
+
+    type wsServerRoom = OmitStrict<wsRoom, "usersId"> & {
+        usersId: Map<string, wsUser["id"]>
+    }
+
+    type wsServerRooms = Map<string, wsServerRoom>
+
+    type wsClientMessage = {
+        user: wsUser
+    } & (
+            {
+                type: "CREATE-USER",
+            } |
+            {
+                type: "JOIN-ROOM",
+                roomId: string
+            } |
+            {
+                type: 'LEAVE-ROOM',
+            }
+        )
+
+    type wsServerMessage = {
+        rooms: wsRooms
+        users: wsUsers
+    }
+
+    type wsServer = {
+        send: {
+            toRoom: () => void,
+            toUser: (peer: wsPeer) => void,
+            toAllUsers: () => void,
+        }
+        onOpen: (peer: wsPeer) => void
+        onMessage: (peer: wsPeer, message: wsClientMessage) => void
+        onClose: (peer: wsPeer) => void
+    }
 }
+
+// Spotify Web API
 
 interface Device {
     id: string | null
@@ -308,3 +379,16 @@ interface FollowersObject {
     href: null // Currently not supported by the Web API
     total: number
 }
+
+// Web Sockets
+
+// Remove possible undefined from objects of a given type 
+type RemoveUndefined<T> = {
+    [K in keyof T]-?: T[K] extends undefined ? never : T[K]
+}
+
+// Extract the type of the `open` method's parameter
+type ExtractOpenParamType<T> = T extends { open(peer: infer P): void } ? P : never
+
+// Define a type that represents the `WebSocketHandler` type
+type WebSocketHandlerType = typeof defineWebSocketHandler extends (handler: infer H) => any ? H : never

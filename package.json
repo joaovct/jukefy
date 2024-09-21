@@ -10,6 +10,8 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@vueuse/core": "^11.0.3",
+    "@vueuse/nuxt": "^11.0.3",
     "lodash": "^4.17.21",
     "nuxt": "^3.13.0",
     "vue": "latest"

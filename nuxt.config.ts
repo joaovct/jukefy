@@ -4,5 +4,13 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   experimental: {
     typedPages: true
-  }
+  },
+  nitro: {
+    experimental: {
+      websocket: true
+    }
+  },
+  modules: [
+    '@vueuse/nuxt',
+  ],
 })
