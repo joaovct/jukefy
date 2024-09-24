@@ -31,7 +31,14 @@ class Server implements wsServer {
 
     switch (type) {
       case "CREATE-USER":
-        users.set(user.id, { ...user, peerId: peer.id })
+        if(!users.get(user.id)){
+          const peers = new Map([[peer.id, peer]])
+          users.set(user.id, {...user, peers })
+        
+        // for when the same user it's connected in a different tab
+        }else{
+          users.get(user.id)?.peers.set(peer.id, peer)
+        }
 
         this.send.toAllUsers()
         return
@@ -60,15 +67,20 @@ class Server implements wsServer {
   }
 
   private _onClose: wsServer["onClose"] = peer => {
+    peers.delete(peer.id)
+
     const usersArr = Array.from(users.values())
-    const user = usersArr.find(user => user.peerId === peer.id)
+    const user = usersArr.find(user => user.peers.has(peer.id))
 
     if(!user)
         return
 
-    users.delete(user.id)
-    peers.delete(peer.id)
-  
+    if(users.get(user.id)?.peers.size === 1){
+      users.delete(user.id)
+    }else{
+      users.get(user.id)?.peers.delete(peer.id)
+    }
+   
     this.send.toAllUsers()
   }
 
@@ -76,6 +88,16 @@ class Server implements wsServer {
     return ({
       toRoom: () => {},
       toUser: (peer) => {
+        const parsedUsers: wsUsers = {}
+
+        users.forEach(user => {
+          parsedUsers[user.id] = {
+            name: user.name,
+            id: user.id,
+            roomId: user.roomId
+          }
+        })
+
         const parsedRooms: wsRooms = {}
 
         rooms.forEach(room => {
@@ -86,8 +108,8 @@ class Server implements wsServer {
         })
 
         const message: wsServerMessage = {
-          users: Object.fromEntries(users),
-          rooms: parsedRooms
+          users: parsedUsers,
+          rooms: parsedRooms,
         }
         
         const stringified = JSON.stringify(message)

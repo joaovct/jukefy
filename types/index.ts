@@ -7,9 +7,9 @@ declare global {
         [key in keyof T as key extends string ? Camelize<key> : key]: T[key] extends object ? CamelizeKeys<T[key]> : T[key]
     }
 
-    type EnforceExact<T, U> = keyof U extends keyof T ? keyof T extends keyof U ? U : never : never;
+    type EnforceExact<T, U> = keyof U extends keyof T ? keyof T extends keyof U ? U : never : never
 
-    type OmitStrict<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+    type OmitStrict<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 
     // WEB API
 
@@ -97,8 +97,10 @@ declare global {
                     }
                 )
                 error_response: {
-                    status: 400 | 403 | 429
-                    message: string
+                    error: {
+                        status: 400 | 403 | 429
+                        message: string
+                    }
                 }
             }
         }
@@ -131,8 +133,10 @@ declare global {
                     uri: string
                 }
                 error_response: {
-                    status: number
-                    message: string
+                    error: {
+                        status: number
+                        message: string
+                    }
                 }
             }
         }
@@ -145,6 +149,7 @@ declare global {
     type wsPeer = ExtractOpenParamType<RemoveUndefined<WebSocketHandlerType>>
 
     interface wsUser {
+        readonly name: string
         readonly id: string
         roomId?: string
     }
@@ -154,7 +159,7 @@ declare global {
     }
 
     interface wsServerUser extends wsUser {
-        readonly peerId: string
+        readonly peers: Map<string, wsPeer>
     }
 
     type wsServerUsers = Map<string, wsServerUser>

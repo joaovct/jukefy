@@ -1,16 +1,19 @@
 <script setup lang="ts">
+import { store } from '~/store'
+
 //TODO: in prod if secure, use wss
-const { ws, status, data, send } = useWebSocket(`ws://${location.host}/api/websocket`, {  })
+const { status, data, send } = useWebSocket(`ws://${location.host}/api/websocket`)
 
 const rooms = ref<wsRooms>({})
 const users = ref<wsUsers>({})
 
 watch(status, status => {
-    if (status === 'OPEN') {
+    if (status === 'OPEN' && store.user.value) {
         const message: wsClientMessage = {
             type: "CREATE-USER",
             user: {
-                id: Date.now().toString(),
+                name: store.user.value.displayName,
+                id: store.user.value.id,
                 roomId: undefined,
             }
         }
@@ -26,12 +29,23 @@ watch(data, stringified => {
     users.value = value.users
 })
 
-watch([users, rooms], () => {
-    console.log(users.value, rooms.value)
-})
-
 </script>
 
 <template>
-    <div></div>
+    <h3>Users</h3>
+    <ul>
+        <li v-for="user in users"> {{ user.name }} </li>
+    </ul>
+    <hr>
+    <h3>Rooms</h3>
+    <ul>
+        <li v-for="room in rooms">
+            <h3>Sala: {{ room.id }}</h3>
+            <br/>
+            Usuários:
+            <ul>
+                <li v-for="userId in room.usersId">{{ userId }}</li>
+            </ul>
+        </li>
+    </ul>
 </template>
