@@ -10,6 +10,12 @@ export default defineNuxtConfig({
       websocket: true
     }
   },
+  plugins: [
+    {
+      src: '@@/plugins/msw',
+      mode: "client"
+    }
+  ],
   modules: [
     '@vueuse/nuxt',
   ],

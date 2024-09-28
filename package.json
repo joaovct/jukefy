@@ -17,6 +17,13 @@
     "vue": "latest"
   },
   "devDependencies": {
-    "@types/lodash": "^4.17.7"
+    "@faker-js/faker": "^9.0.3",
+    "@types/lodash": "^4.17.7",
+    "msw": "^2.4.9"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

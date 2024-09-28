@@ -11,7 +11,7 @@ async function getCurrentUserProfile(): Promise<WebAPI["Users"]["getCurrentUserP
         }
     }
 
-    const req = await fetch(baseURL, payload)
+    const req = await fetch(getCurrentUserProfile.url, payload)
 
     if(req.status !== 200){
         const response: Web_API["Users"]["get_current_user_profile"]["error_response"] = await req.json()
@@ -22,6 +22,8 @@ async function getCurrentUserProfile(): Promise<WebAPI["Users"]["getCurrentUserP
 
     return camelize(response)
 }
+
+getCurrentUserProfile.url = baseURL
 
 export const users = {
     baseURL,
