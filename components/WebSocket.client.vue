@@ -29,6 +29,23 @@ watch(data, stringified => {
     users.value = value.users
 })
 
+function joinRoom(roomId: wsRoom["id"]){
+    if(!store.user.value)
+        return
+
+    const message: wsClientMessage = {
+        type: "JOIN-ROOM",
+        roomId,
+        user: {
+            id: store.user.value.id,
+            name: store.user.value.displayName,
+            roomId: roomId
+        }
+    }
+
+    send(JSON.stringify(message))
+}
+
 </script>
 
 <template>
@@ -42,10 +59,11 @@ watch(data, stringified => {
         <li v-for="room in rooms">
             <h3>Sala: {{ room.id }}</h3>
             <br/>
-            Usuários:
+            users:
             <ul>
-                <li v-for="userId in room.usersId">{{ userId }}</li>
+                <li v-for="userId in room.guests">{{ userId }}</li>
             </ul>
+            <button :onclick="() => joinRoom(room.id)">join room</button>
         </li>
     </ul>
 </template>

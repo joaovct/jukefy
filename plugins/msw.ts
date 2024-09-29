@@ -1,5 +1,7 @@
 import { worker } from '../mocks/browser'
 
 export default defineNuxtPlugin(() => {
-    worker.start()
+    if (import.meta.dev) {
+        worker.start()
+    }
 })

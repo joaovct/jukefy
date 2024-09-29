@@ -166,15 +166,16 @@ declare global {
 
     interface wsRoom {
         readonly id: string
-        readonly usersId: string[]
+        readonly host: wsUser["id"]
+        readonly guests: wsUser["id"][]
     }
 
     interface wsRooms {
         [key: wsRoom['id']]: wsRoom
     }
 
-    type wsServerRoom = OmitStrict<wsRoom, "usersId"> & {
-        usersId: Map<string, wsUser["id"]>
+    type wsServerRoom = OmitStrict<wsRoom, "guests"> & {
+        guests: Map<string, wsUser["id"]>
     }
 
     type wsServerRooms = Map<string, wsServerRoom>
