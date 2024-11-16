@@ -1,3 +1,4 @@
+import { faker } from "@faker-js/faker"
 import { store } from "~/store"
 
 export const baseURL = "https://accounts.spotify.com"
@@ -39,6 +40,17 @@ function requestUserAuthorization() {
             redirect_uri: import.meta.env.VITE_REDIRECT_URI,
         }
 
+        if(import.meta.dev){
+            const params: Authorization_code_PKCE["request_user_authorization"]["response"] = {
+                code: faker.string.alphanumeric(256),
+                state: ""
+            }
+
+            const query = new URLSearchParams(params).toString()
+
+            return window.location.href = import.meta.env.VITE_REDIRECT_URI + "?" + query
+        }
+
         authUrl.search = new URLSearchParams(params).toString()
         window.location.href = authUrl.toString()
     })
@@ -57,11 +69,12 @@ async function requestAccessToken(): Promise<AuthorizationCodePKCE["requestAcces
         grant_type: 'authorization_code',
     }
 
-    const req = await fetch(baseURL + "/api/token", { 
+    const req = await fetch(requestAccessToken.url, {
         method,
         headers,
-        body: new URLSearchParams(body) 
+        body: new URLSearchParams(body)
     })
+
 
     if (!req.ok) {
         const response: Authorization_code_PKCE["request_access_token"]["error_response"] = await req.json()
@@ -72,6 +85,8 @@ async function requestAccessToken(): Promise<AuthorizationCodePKCE["requestAcces
 
     return camelize(response)
 }
+
+requestAccessToken.url = baseURL + "/api/token"
 
 export const authorization = {
     requestUserAuthorization,

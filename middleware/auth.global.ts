@@ -12,7 +12,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
         // redirects to unrestricted area if user's is not logged
         if (!isAuthorizationSuccessful) {
             // avoid rendering problems
-            return window.location.href = "/"
+            console.log('oh no')
+            // return window.location.href = "/"
         }
         // redirect to restricted area if logged users access a unrestricted area
     } else if (utils.token.isAccessTokenStoredValid()) {
